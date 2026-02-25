@@ -15,6 +15,8 @@ export interface DownlineUser {
   username: string;
   email: string;
   isActive: boolean;
+  isBettingDisabled: boolean;
+  isUserCreationDisabled: boolean;
   depth: number;
   createdAt: string;
   role: { id: string; name: string; level: number; displayName: string };
@@ -25,6 +27,13 @@ export interface CreateDownlinePayload {
   email: string;
   password: string;
   roleId: string;
+}
+
+export interface UpdateAccessPayload {
+  userId: string;
+  isActive?: boolean;
+  isBettingDisabled?: boolean;
+  isUserCreationDisabled?: boolean;
 }
 
 export interface TransferPayload {
@@ -78,6 +87,18 @@ export function useTransferPoints() {
       qc.invalidateQueries({ queryKey: ['hierarchy', 'tree'] });
       qc.invalidateQueries({ queryKey: ['ledger', 'balance'] });
       qc.invalidateQueries({ queryKey: ['auth', 'me'] });
+    },
+  });
+}
+
+/** Update access control flags. */
+export function useUpdateAccessControl() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, ...payload }: UpdateAccessPayload) =>
+      api.patch(`/hierarchy/${userId}/access`, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['hierarchy', 'tree'] });
     },
   });
 }

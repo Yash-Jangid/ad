@@ -66,7 +66,7 @@ export default function MatchesPage() {
             : allMatches.length > 0
               ? allMatches.map((m) => <MatchCard key={m.id} match={m} />)
               : (
-                  <div className="col-span-full text-center py-12">
+                  <div className="col-span-full py-20 flex flex-col items-center justify-center text-center glass-card rounded-2xl border-dashed border-2 border-border/50">
                     <Text variant="small" color="secondary">
                       {search ? 'No matches found for your search.' : 'No matches available.'}
                     </Text>

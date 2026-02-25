@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, RefreshCw, Target } from 'lucide-react';
 import { Icon } from '@/components/atoms/Icon';
 import { Text } from '@/components/atoms/Text';
 import { VirtualizedList } from '@/components/organisms/VirtualizedList';
@@ -69,6 +69,15 @@ export function PredictionHistory() {
 
   const allPredictions = data?.pages.flatMap((page) => page.data) ?? [];
 
+  if (allPredictions.length === 0) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center text-center glass-card rounded-2xl border-dashed border-2 border-border/50">
+        <Icon icon={Target} size={32} className="text-muted-foreground/30 mb-3" />
+        <Text variant="small" color="secondary">No predictions yet. Place your first prediction!</Text>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-xl overflow-hidden">
       <VirtualizedList
@@ -76,9 +85,6 @@ export function PredictionHistory() {
         estimateSize={72}
         className="max-h-[600px]"
         renderItem={(prediction) => <PredictionRow key={prediction.id} prediction={prediction} />}
-        renderEmpty={() => (
-          <Text variant="small" color="secondary">No predictions yet. Place your first prediction!</Text>
-        )}
       />
 
       {/* Load more */}

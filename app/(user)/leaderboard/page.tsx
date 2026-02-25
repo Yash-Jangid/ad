@@ -77,13 +77,13 @@ function MyRankBanner() {
           Your Rank
         </Text>
         <Text variant="h3" weight="bold" className="mt-0.5">
-          #{myRank.rank}
+          {myRank.rank ? `#${myRank.rank}` : '—'}
         </Text>
       </div>
       <div className="text-right">
         <Text variant="caption" color="tertiary">Points</Text>
         <Text variant="small" weight="semibold" className="font-mono">
-          {formatPoints(myRank.totalPoints)} pts
+          {formatPoints(myRank.totalPoints ?? 0)} pts
         </Text>
       </div>
     </div>
@@ -114,7 +114,8 @@ export default function LeaderboardPage() {
               <SkeletonList />
             </div>
           ) : leaderboard?.length === 0 ? (
-            <div className="py-16 text-center">
+            <div className="py-16 flex flex-col items-center justify-center text-center">
+              <Icon icon={Trophy} size={32} className="text-muted-foreground/30 mb-3" />
               <Text variant="small" color="secondary">No entries yet. Be the first!</Text>
             </div>
           ) : (

@@ -11,6 +11,7 @@ import { Icon } from '@/components/atoms/Icon';
 import { SkeletonCard } from '@/components/skeletons/SkeletonCard';
 import { CreateDownlineModal } from '@/components/features/hierarchy/CreateDownlineModal';
 import { TopUpModal } from '@/components/features/hierarchy/TopUpModal';
+import { ManageAccessModal } from '@/components/features/hierarchy/ManageAccessModal';
 import { useMyTeam, type DownlineUser } from '@/lib/api/hooks/useHierarchy';
 import { formatPoints } from '@/lib/utils/formatters';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -39,10 +40,11 @@ function RoleBadge({ name, level }: { name: string; level: number }) {
 interface TeamRowProps {
   node: DownlineUser;
   onTopUp: (userId: string, username: string) => void;
+  onManageAccess: (user: DownlineUser) => void;
 }
 
-function TeamRow({ node, onTopUp }: TeamRowProps) {
-  const { id, username, email, role, isActive, depth } = node;
+function TeamRow({ node, onTopUp, onManageAccess }: TeamRowProps) {
+  const { id, username, email, role, isActive, isBettingDisabled, depth } = node;
   const initials = username.slice(0, 2).toUpperCase();
 
   return (
@@ -64,7 +66,7 @@ function TeamRow({ node, onTopUp }: TeamRowProps) {
           <Text variant="small" weight="semibold" className="truncate">{username}</Text>
           <RoleBadge name={role.name} level={role.level} />
           {isActive ? (
-            <Icon icon={CheckCircle} size={12} className="text-success" />
+            <Icon icon={CheckCircle} size={12} className={cn("text-success", isBettingDisabled && "text-warning")} />
           ) : (
             <Icon icon={XCircle} size={12} className="text-error" />
           )}
@@ -80,18 +82,30 @@ function TeamRow({ node, onTopUp }: TeamRowProps) {
         <Text variant="caption" color="tertiary">L{depth}</Text>
       </div>
 
-      {/* Top-Up button */}
-      <button
-        onClick={() => onTopUp(id, username)}
-        className={cn(
-          'shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium',
-          'bg-primary/10 text-primary border border-primary/20',
-          'hover:bg-primary hover:text-white transition-all duration-200',
-        )}
-      >
-        <Icon icon={Zap} size={12} />
-        Top-Up
-      </button>
+      {/* Actions */}
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => onManageAccess(node)}
+          className={cn(
+            'flex items-center justify-center p-2 rounded-lg text-text-secondary',
+            'hover:bg-background-tertiary hover:text-text-primary transition-colors',
+          )}
+          title="Manage Access"
+        >
+          <Icon icon={Shield} size={16} />
+        </button>
+        <button
+          onClick={() => onTopUp(id, username)}
+          className={cn(
+            'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium',
+            'bg-primary/10 text-primary border border-primary/20',
+            'hover:bg-primary hover:text-white transition-all duration-200',
+          )}
+        >
+          <Icon icon={Zap} size={12} />
+          Top-Up
+        </button>
+      </div>
     </div>
   );
 }
@@ -112,6 +126,7 @@ export default function MyTeamPage() {
   const { data, isLoading, error } = useMyTeam();
   const [showCreate, setShowCreate] = useState(false);
   const [topUpTarget, setTopUpTarget] = useState<{ userId: string; username: string } | null>(null);
+  const [accessTarget, setAccessTarget] = useState<DownlineUser | null>(null);
 
   const members: DownlineUser[] = (data as { data?: DownlineUser[] } | undefined)?.data ?? [];
 
@@ -204,6 +219,7 @@ export default function MyTeamPage() {
               key={node.id}
               node={node}
               onTopUp={handleTopUp}
+              onManageAccess={(u) => setAccessTarget(u)}
             />
           ))}
         </section>
@@ -213,6 +229,11 @@ export default function MyTeamPage() {
       <CreateDownlineModal
         open={showCreate}
         onClose={() => setShowCreate(false)}
+      />
+      <ManageAccessModal 
+        open={!!accessTarget}
+        onClose={() => setAccessTarget(null)}
+        targetUser={accessTarget}
       />
       {topUpTarget && (
         <TopUpModal

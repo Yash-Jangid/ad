@@ -80,7 +80,14 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {upcomingLoading
               ? Array.from({ length: 3 }).map((_, i) => <MatchCardSkeleton key={i} />)
-              : (Array.isArray(upcomingMatches) ? upcomingMatches : []).slice(0, 6).map((m) => <MatchCard key={m.id} match={m} />)}
+              : upcomingMatches && upcomingMatches.length > 0 
+                ? upcomingMatches.slice(0, 6).map((m) => <MatchCard key={m.id} match={m} />)
+                : (
+                   <div className="col-span-full py-12 flex flex-col items-center justify-center text-center glass-card rounded-xl border-dashed border-2 border-border/50">
+                     <Text variant="small" color="secondary">No upcoming matches scheduled.</Text>
+                   </div>
+                 )
+            }
           </div>
         </section>
       </div>

@@ -57,6 +57,8 @@ export interface User {
   role: string;
   canHaveChild: boolean;
   isActive: boolean;
+  isBettingDisabled?: boolean;
+  isUserCreationDisabled?: boolean;
   balance: number;
   createdAt: string;
 }
