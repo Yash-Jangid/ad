@@ -1,23 +1,64 @@
 /**
- * useRoles — fetches all active roles from GET /roles.
- * Used in the Create Downline modal to render a role selector.
+ * useRoles — fetches and mutates roles from the dynamic Roles Module.
  */
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
+import { ENDPOINTS } from '@/lib/api/endpoints';
+import type { Role } from '@/lib/api/types';
 
-export interface Role {
-  id: string;
+export interface CreateRoleDto {
   name: string;
   displayName: string;
   level: number;
-  canHaveChild: boolean;
-  isActive: boolean;
+  canHaveChild?: boolean;
+  defaultCommissionPct?: number;
+}
+
+export interface UpdateRoleDto extends Partial<CreateRoleDto> {
+  isActive?: boolean;
 }
 
 export function useRoles() {
-  return useQuery({
-    queryKey: ['roles'],
-    queryFn: () => api.get<Role[]>('/admin/roles/active'),
-    staleTime: 5 * 60_000, // roles change rarely
+  const queryClient = useQueryClient();
+
+  // Used for Admin Role CRUD
+  // Backend returns Role[] directly (no { data: [...] } wrapper)
+  const allRolesQuery = useQuery({
+    queryKey: ['roles', 'all'],
+    queryFn: () => api.get<Role[]>(ENDPOINTS.admin.roles()),
   });
+
+  // Used for assigning users (dropdowns)
+  const activeRolesQuery = useQuery({
+    queryKey: ['roles', 'active'],
+    queryFn: () => api.get<Role[]>(ENDPOINTS.admin.rolesActive()),
+    staleTime: 5 * 60_000,
+  });
+
+  const createRole = useMutation({
+    mutationFn: async (dto: CreateRoleDto) =>
+      api.post<Role>(ENDPOINTS.admin.roles(), dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+    },
+  });
+
+  const updateRole = useMutation({
+    mutationFn: async ({ id, dto }: { id: string; dto: UpdateRoleDto }) =>
+      api.patch<Role>(ENDPOINTS.admin.roleById(id), dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+    },
+  });
+
+  return {
+    roles: allRolesQuery.data ?? [],
+    isLoadingAll: allRolesQuery.isLoading,
+    
+    activeRoles: activeRolesQuery.data ?? [],
+    isLoadingActive: activeRolesQuery.isLoading,
+
+    createRole,
+    updateRole,
+  };
 }

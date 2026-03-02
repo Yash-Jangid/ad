@@ -6,6 +6,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
+import { ENDPOINTS } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/lib/stores/authStore';
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -99,6 +100,33 @@ export function useUpdateAccessControl() {
       api.patch(`/hierarchy/${userId}/access`, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['hierarchy', 'tree'] });
+    },
+  });
+}
+
+/** Promote User (Option B: Orphan and Promote) */
+export function usePromoteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, roleId }: { userId: string; roleId: string }) =>
+      api.post(ENDPOINTS.hierarchy.promote(userId), { roleId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['hierarchy', 'tree'] });
+      // We also invalidate admin users table to make sure it picks up role shifts
+      qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+  });
+}
+
+/** Demote User (Administrator-only: re-assigns a lower role and reparents under root). */
+export function useDemoteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, roleId }: { userId: string; roleId: string }) =>
+      api.post(ENDPOINTS.hierarchy.demote(userId), { roleId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['hierarchy', 'tree'] });
+      qc.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
   });
 }

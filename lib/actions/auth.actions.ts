@@ -32,7 +32,7 @@ export async function loginAction(dto: LoginDto): Promise<{ error?: string; succ
       maxAge: 60 * 60 * 24 * 30, // 30 days for refresh
     });
     // Non-httpOnly so middleware (Edge runtime) can read it for role-based guards
-    jar.set('user_role', user.role.toUpperCase(), {
+    jar.set('user_role', user.role.name.toUpperCase(), {
       ...cookieOptions,
       httpOnly: false,
     });
@@ -54,7 +54,7 @@ export async function registerAction(dto: RegisterDto): Promise<{ error?: string
       ...cookieOptions,
       maxAge: 60 * 60 * 24 * 30,
     });
-    jar.set('user_role', user.role.toUpperCase(), {
+    jar.set('user_role', user.role.name.toUpperCase(), {
       ...cookieOptions,
       httpOnly: false,
     });

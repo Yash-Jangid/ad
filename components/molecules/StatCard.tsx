@@ -18,6 +18,7 @@ interface StatCardProps {
   change?: Change;
   variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
   className?: string;
+  onClick?: () => void;
 }
 
 // ─── Variant Maps ─────────────────────────────────────────────────────────────
@@ -39,13 +40,16 @@ export function StatCard({
   change,
   variant = 'default',
   className,
+  onClick,
 }: StatCardProps) {
   const isPositive = (change?.value ?? 0) >= 0;
 
   return (
     <div
+      onClick={onClick}
       className={cn(
         'glass-card rounded-xl p-5 flex items-start justify-between gap-4 transition-shadow hover:shadow-lg',
+        onClick && 'cursor-pointer hover:ring-2 hover:ring-primary/50',
         className
       )}
     >

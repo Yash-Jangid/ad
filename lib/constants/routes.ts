@@ -20,6 +20,7 @@ export const ROUTES = {
     predictions: '/predictions',
     leaderboard: '/leaderboard',
     ledger:      '/ledger',
+    transactions:'/transactions',
     profile:     '/profile',
     myTeam:      '/my-team',
   },
@@ -29,7 +30,9 @@ export const ROUTES = {
     root:      '/admin',
     matches:   '/admin/matches',
     users:     '/admin/users',
+    roles:     '/admin/roles',
     auditLogs: '/admin/audit-logs',
+    treasury:  '/admin/treasury',
   },
 } as const;
 
@@ -40,17 +43,20 @@ export const PROTECTED_ROUTES = [
   ROUTES.user.predictions,
   ROUTES.user.leaderboard,
   ROUTES.user.ledger,
+  ROUTES.user.transactions,
   ROUTES.user.profile,
   ROUTES.user.myTeam,
-  ROUTES.admin.root,
   ROUTES.admin.matches,
   ROUTES.admin.users,
   ROUTES.admin.auditLogs,
+  ROUTES.admin.treasury,
 ] as const;
 
 export const ADMIN_ROUTES = [
   ROUTES.admin.root,
   ROUTES.admin.matches,
   ROUTES.admin.users,
+  ROUTES.admin.roles,
   ROUTES.admin.auditLogs,
+  ROUTES.admin.treasury,
 ] as const;

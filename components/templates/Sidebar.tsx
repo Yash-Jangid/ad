@@ -4,7 +4,7 @@ import React from 'react';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Trophy, Zap, TrendingUp, Wallet, Settings, Shield, User, Users, LogOut,
+  LayoutDashboard, Trophy, Zap, TrendingUp, Wallet, Settings, Shield, User, Users, LogOut, Activity, BarChart2
 } from 'lucide-react';
 import { Icon } from '@/components/atoms/Icon';
 import { Text } from '@/components/atoms/Text';
@@ -25,9 +25,20 @@ const userNavItems = [
   { href: ROUTES.user.profile,      icon: User,            label: 'Profile'     },
 ] as const;
 
+// Shown ONLY for sub-admin roles (canHaveChild but not top-level admin)
+const subAdminNavItems = [
+  { href: ROUTES.user.transactions, icon: BarChart2, label: 'Transactions' },
+] as const;
+
 const adminNavItems = [
   { href: ROUTES.admin.matches, icon: Settings, label: 'Matches'  },
   { href: ROUTES.admin.users,   icon: Shield,   label: 'Users'    },
+] as const;
+
+const rootAdminNavItems = [
+  { href: ROUTES.admin.roles,    icon: Settings, label: 'Roles'      },
+  { href: ROUTES.admin.treasury, icon: Wallet,   label: 'Treasury'   },
+  { href: ROUTES.admin.auditLogs, icon: Activity, label: 'Audit Logs' },
 ] as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -41,7 +52,12 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
-  const isAdmin = typeof user?.role === 'string' && user.role.toLowerCase() === 'admin';
+  
+  // Safely check role name whether it's the old string format or the new object format
+  const roleName  = typeof user?.role === 'string' ? user.role : user?.role?.name;
+  const roleLevel = typeof user?.role === 'object' ? (user?.role as any)?.level : undefined;
+  const isAdmin         = roleName?.toLowerCase() === 'admin' || roleName?.toLowerCase() === 'administrator';
+  const isSubAdminTier  = user?.canHaveChild && !isAdmin; // Agent / Master / Super-Master — not top-level admin
 
   const handleLogout = async () => {
     clearAuth();
@@ -107,12 +123,28 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             );
           })}
 
+          {/* Sub-admin tier: Transactions view (Agent / Master / Super-Master) */}
+          {isSubAdminTier && (
+            <>
+              <Text variant="caption" color="tertiary" className="px-3 mt-4 mb-2 uppercase tracking-widest font-semibold">
+                My Team
+              </Text>
+              {subAdminNavItems.map((item) => (
+                <NavLink key={item.href} {...item} />
+              ))}
+            </>
+          )}
+
           {isAdmin && (
             <>
               <Text variant="caption" color="tertiary" className="px-3 mt-4 mb-2 uppercase tracking-widest font-semibold">
                 Admin
               </Text>
               {adminNavItems.map((item) => (
+                <NavLink key={item.href} {...item} />
+              ))}
+              {/* Root-Admin-only: Roles, Treasury, Audit Logs */}
+              {(roleLevel === 0 || roleLevel === undefined) && rootAdminNavItems.map((item) => (
                 <NavLink key={item.href} {...item} />
               ))}
             </>

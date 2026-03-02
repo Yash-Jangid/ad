@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Trophy, Zap, TrendingUp, Activity } from 'lucide-react';
 import { DashboardLayout } from '@/components/templates/DashboardLayout';
 import { StatCard } from '@/components/molecules/StatCard';
 import { MatchCard, MatchCardSkeleton } from '@/components/features/match/MatchCard';
+import { SelfTopUpModal } from '@/components/features/dashboard/SelfTopUpModal';
 import { Text } from '@/components/atoms/Text';
 import { useUpcomingMatches, useLiveMatches } from '@/lib/api/hooks/useMatches';
 import { useMyRank } from '@/lib/api/hooks/useLeaderboard';
@@ -13,6 +14,15 @@ import { formatPoints } from '@/lib/utils/formatters';
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const [showSelfTopUp, setShowSelfTopUp] = useState(false);
+  // Handle both old string format ('ADMINISTRATOR') and new object format ({ level: 0 })
+  const isRoot = (() => {
+    const role = user?.role;
+    if (!role) return false;
+    if (typeof role === 'object') return (role as { level: number }).level === 0;
+    return (role as unknown as string) === 'ADMINISTRATOR';
+  })();
+
   const { data: liveMatches, isLoading: liveLoading } = useLiveMatches();
   const { data: upcomingMatches, isLoading: upcomingLoading } = useUpcomingMatches();
   const { data: myRank } = useMyRank();
@@ -45,9 +55,10 @@ export default function DashboardPage() {
           />
           <StatCard
             icon={Zap}
-            label="Balance"
+            label={isRoot ? 'Balance (click to top-up)' : 'Balance'}
             value={user ? formatPoints(user.balance) : '—'}
             variant="info"
+            onClick={isRoot ? () => setShowSelfTopUp(true) : undefined}
           />
           <StatCard
             icon={Activity}
@@ -91,6 +102,8 @@ export default function DashboardPage() {
           </div>
         </section>
       </div>
+
+      <SelfTopUpModal open={showSelfTopUp} onClose={() => setShowSelfTopUp(false)} />
     </DashboardLayout>
   );
 }

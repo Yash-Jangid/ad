@@ -53,9 +53,9 @@ export interface User {
   id: string;
   email: string;
   username: string;
-  name: string;
-  role: string;
-  canHaveChild: boolean;
+  name?: string;
+  role: Role;
+  canHaveChild?: boolean;
   isActive: boolean;
   isBettingDisabled?: boolean;
   isUserCreationDisabled?: boolean;
@@ -66,8 +66,13 @@ export interface User {
 export interface Role {
   id: string;
   name: string;
+  displayName: string;
   level: number;
-  commissionRate: number;
+  canHaveChild: boolean;
+  defaultCommissionPct: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // ── Match ─────────────────────────────────────────────────────────────────────
@@ -185,19 +190,42 @@ export interface LedgerBalance {
   currency: 'POINTS';
 }
 
-// ── Audit ─────────────────────────────────────────────────────────────────────
+// ── Audit Logs ─────────────────────────────────────────────────────────────────
 
-export type AuditSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type AuditAction =
+  | 'READ'
+  | 'CREATE'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'AUTH'
+  | 'ADMIN_ACTION'
+  | 'SYSTEM';
+
+export type AuditSeverity = 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL';
+
+export interface AuditRequestMeta {
+  ipAddress: string;
+  userAgent: string;
+  endpoint: string;
+  httpMethod: string;
+  statusCode: number;
+  responseTimeMs: number;
+}
 
 export interface AuditLog {
-  id: string;
-  actorId: string;
-  actorEmail: string;
+  _id: string;
+  action: AuditAction;
   resource: string;
-  action: string;
-  statusCode: number;
+  resourceId: string;
+  actorId: string;
+  actorRole: string;
+  requestMeta: AuditRequestMeta;
+  diff?: {
+    before?: Record<string, unknown>;
+    after?: Record<string, unknown>;
+  };
+  tags: string[];
   severity: AuditSeverity;
-  tags?: string[];
-  metadata?: Record<string, unknown>;
   createdAt: string;
+  updatedAt: string;
 }

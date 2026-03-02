@@ -25,7 +25,7 @@ const INPUT_CLS =
 
 export function CreateDownlineModal({ open, onClose }: Props) {
   const currentUser = useAuthStore((s) => s.user);
-  const { data: rolesData, isLoading: rolesLoading } = useRoles();
+  const { activeRoles: rolesData, isLoadingActive: rolesLoading } = useRoles();
   const { mutateAsync: createDownline, isPending } = useCreateDownline();
 
   const [form, setForm] = useState({

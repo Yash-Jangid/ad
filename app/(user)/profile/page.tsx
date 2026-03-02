@@ -86,6 +86,10 @@ export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const { data: myRank, isLoading: rankLoading } = useMyRank();
 
+  const roleDisplay = typeof user?.role === 'object' 
+    ? (user.role.displayName || user.role.name) 
+    : user?.role;
+
   if (!user) {
     return (
       <DashboardLayout>
@@ -107,7 +111,7 @@ export default function ProfilePage() {
           <div>
             <Text variant="h3" weight="bold">{user.username}</Text>
             <Text variant="small" color="secondary" className="mt-0.5">
-              {user.role ?? 'User'} · Member
+              {roleDisplay ?? 'User'} · Member
             </Text>
           </div>
         </div>
@@ -144,7 +148,7 @@ export default function ProfilePage() {
               <Text variant="caption" color="tertiary" className="w-24 shrink-0">Role</Text>
               <div className="flex items-center gap-2">
                 <Icon icon={Shield} size={14} className="text-primary" />
-                <Text variant="small" weight="medium">{user.role ?? 'User'}</Text>
+                <Text variant="small" weight="medium">{roleDisplay ?? 'User'}</Text>
               </div>
             </div>
           </div>

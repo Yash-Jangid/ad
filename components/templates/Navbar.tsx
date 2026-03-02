@@ -97,7 +97,7 @@ export function Navbar({ onMobileMenuToggle, isMobileMenuOpen }: NavbarProps) {
         {/* User menu */}
         {user && (
           <div className="flex items-center gap-2">
-            <UserAvatar name={user.name} size="sm" />
+            <UserAvatar name={user.name || 'User'} size="sm" />
             <button
               type="button"
               onClick={handleLogout}
