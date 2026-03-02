@@ -3,7 +3,8 @@ import { z } from 'zod';
 // ─── Auth Schemas ─────────────────────────────────────────────────────────────
 
 export const loginSchema = z.object({
-  identifier: z.string()
+  identifier: z
+    .string()
     .min(3, 'Username or Email must be at least 3 characters')
     .refine(
       (val) => {
@@ -39,9 +40,13 @@ export const registerSchema = z
 
 export const placePredictionSchema = z.object({
   matchId: z.string().min(1),
-  amount: z.number().positive('Amount must be positive').min(1, 'Minimum 1 point'),
-  side: z.enum(['BACK', 'LAY']),
-  outcome: z.enum(['TEAM_A_WIN', 'TEAM_B_WIN', 'DRAW']),
+  marketId: z.string().min(1, 'Select a market first'),
+  outcomeKey: z.string().min(1, 'Select an outcome'),
+  stake: z
+    .number()
+    .positive('Stake must be positive')
+    .min(1, 'Minimum 1 point')
+    .int('Stake must be a whole number'),
   idempotencyKey: z.string().min(20),
 });
 

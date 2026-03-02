@@ -46,7 +46,7 @@ export function LiveScoreboard({ match }: LiveScoreboardProps) {
               </Text>
             </>
           ) : (
-            <Text variant="caption" color="secondary" className="uppercase tracking-wide">
+            <Text variant="caption" color="secondary" className="uppercase tracking-wide" suppressHydrationWarning>
               {formatEnumLabel(match.status)}
             </Text>
           )}

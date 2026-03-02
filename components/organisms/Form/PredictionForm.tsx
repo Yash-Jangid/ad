@@ -16,18 +16,22 @@ import { toast } from 'sonner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+import type { Market, MarketOutcome } from '@/lib/api/types';
+
 interface PredictionFormProps {
   match: Match;
   userBalance: number;
   onSuccess?: () => void;
+  /** Optional: pre-selected market from MarketTabs */
+  selectedMarket?: Market;
+  /** Optional: pre-selected outcome from MarketTabs */
+  selectedOutcome?: MarketOutcome;
 }
 
-type Side = 'BACK' | 'LAY';
-type Outcome = 'TEAM_A_WIN' | 'TEAM_B_WIN' | 'DRAW';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function PredictionForm({ match, userBalance, onSuccess }: PredictionFormProps) {
+export function PredictionForm({ match, userBalance, onSuccess, selectedMarket, selectedOutcome }: PredictionFormProps) {
   const { mutate: placePrediction, isPending } = usePlacePrediction();
   const [, startTransition] = useTransition();
 
@@ -35,32 +39,45 @@ export function PredictionForm({ match, userBalance, onSuccess }: PredictionForm
     resolver: zodResolver(placePredictionSchema),
     defaultValues: {
       matchId: match.id,
-      side: 'BACK',
-      outcome: 'TEAM_A_WIN',
+      marketId: selectedMarket?.id ?? '',
+      outcomeKey: selectedOutcome?.outcomeKey ?? '',
+      stake: 0,
       idempotencyKey: IdempotencyManager.getKey(`prediction-${match.id}`),
     },
   });
 
+  React.useEffect(() => {
+    methods.setValue('marketId', selectedMarket?.id ?? '');
+    methods.setValue('outcomeKey', selectedOutcome?.outcomeKey ?? '');
+  }, [selectedMarket, selectedOutcome, methods]);
+
   const { watch, handleSubmit, reset } = methods;
-  const [side, outcome, amount] = watch(['side', 'outcome', 'amount']);
+  const stake = watch('stake');
 
-  const selectedOdds = {
-    TEAM_A_WIN: match.odds.teamAWin,
-    TEAM_B_WIN: match.odds.teamBWin,
-    DRAW:       match.odds.draw,
-  }[outcome];
+  // Use market odds when a market is selected, else fall back to 1.90 default
+  const selectedOdds = selectedOutcome?.decimalOdds ?? 1.90;
 
-  const potentialReturn = amount && selectedOdds
-    ? (amount * selectedOdds).toFixed(0)
+  const potentialReturn = stake && selectedOdds
+    ? (stake * selectedOdds).toFixed(0)
     : '—';
+
 
   const onSubmit = handleSubmit((data) => {
     startTransition(() => {
+      // Build Phase 26 DTO: stake + marketId + outcomeKey
+      // If a market was selected via MarketTabs, use that market/outcome.
+      // Otherwise fall back to old match-winner style (for backward compat).
+      const payload: Record<string, unknown> = {
+        matchId: data.matchId,
+        stake: data.stake,
+        marketId: selectedMarket?.id ?? data.marketId,
+        outcomeKey: selectedOutcome?.outcomeKey ?? data.outcomeKey,
+      };
       placePrediction(
-        { matchId: data.matchId, amount: data.amount, side: data.side, outcome: data.outcome },
+        payload as any,
         {
           onSuccess: () => {
-            toast.success('Prediction placed!', { description: `${formatPoints(data.amount)} staked on ${data.outcome}` });
+            toast.success('Prediction placed!', { description: `${formatPoints(data.stake)} staked` });
             reset({ ...methods.getValues(), idempotencyKey: IdempotencyManager.getKey(`prediction-${match.id}-${Date.now()}`) });
             onSuccess?.();
           },
@@ -76,58 +93,24 @@ export function PredictionForm({ match, userBalance, onSuccess }: PredictionForm
     <FormProvider {...methods}>
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
 
-        {/* Back / Lay toggle */}
+        {/* Selected market / outcome display */}
         <div>
           <Text variant="caption" color="secondary" className="mb-2 uppercase tracking-wide font-medium">
-            Position
+            Selected Outcome
           </Text>
-          <div className="grid grid-cols-2 gap-2">
-            {(['BACK', 'LAY'] as Side[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => methods.setValue('side', s)}
-                className={cn(
-                  'py-2 rounded-lg text-sm font-semibold border transition-all',
-                  s === 'BACK' && side === 'BACK' && 'odds-back ring-1 ring-blue-500/50',
-                  s === 'BACK' && side !== 'BACK' && 'border-border text-text-secondary hover:odds-back',
-                  s === 'LAY'  && side === 'LAY'  && 'odds-lay ring-1 ring-pink-500/50',
-                  s === 'LAY'  && side !== 'LAY'  && 'border-border text-text-secondary hover:odds-lay',
-                )}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Outcome selection */}
-        <div>
-          <Text variant="caption" color="secondary" className="mb-2 uppercase tracking-wide font-medium">
-            Outcome
-          </Text>
-          <div className="space-y-2">
-            {([
-              { key: 'TEAM_A_WIN' as Outcome, label: match.teamA, odds: match.odds.teamAWin },
-              { key: 'TEAM_B_WIN' as Outcome, label: match.teamB, odds: match.odds.teamBWin },
-              { key: 'DRAW'       as Outcome, label: 'Draw',      odds: match.odds.draw      },
-            ] satisfies { key: Outcome; label: string; odds: number }[]).map((o) => (
-              <button
-                key={o.key}
-                type="button"
-                onClick={() => methods.setValue('outcome', o.key)}
-                className={cn(
-                  'w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-all',
-                  outcome === o.key
-                    ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border bg-background-secondary text-text-primary hover:border-primary/30'
-                )}
-              >
-                <span className="font-medium">{o.label}</span>
-                <span className="font-mono text-xs opacity-75">{formatOdds(o.odds)}</span>
-              </button>
-            ))}
-          </div>
+          {selectedMarket && selectedOutcome ? (
+            <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-primary/40 bg-primary/5">
+              <div>
+                <p className="text-sm font-medium text-text-primary">{selectedOutcome.label}</p>
+                <p className="text-xs text-text-secondary">{selectedMarket.displayName}</p>
+              </div>
+              <span className="font-mono text-sm font-semibold text-primary">{formatOdds(selectedOutcome.decimalOdds)}</span>
+            </div>
+          ) : (
+            <div className="px-3 py-3 rounded-lg border border-dashed border-border bg-background-secondary text-center">
+              <p className="text-xs text-text-tertiary">Select a market and outcome above to place a bet</p>
+            </div>
+          )}
         </div>
 
         {/* Amount */}
@@ -141,7 +124,7 @@ export function PredictionForm({ match, userBalance, onSuccess }: PredictionForm
             </Text>
           </div>
           <Controller
-            name="amount"
+            name="stake"
             control={methods.control}
             render={({ field, fieldState }) => (
               <div>
@@ -180,7 +163,7 @@ export function PredictionForm({ match, userBalance, onSuccess }: PredictionForm
         {/* Submit */}
         <button
           type="submit"
-          disabled={isPending || match.predictionsLocked}
+          disabled={isPending || match.predictionsLocked || !selectedMarket || !selectedOutcome}
           className={cn(
             'w-full flex items-center justify-center gap-2 py-3 rounded-lg',
             'font-semibold text-sm bg-primary text-primary-foreground',
@@ -194,7 +177,9 @@ export function PredictionForm({ match, userBalance, onSuccess }: PredictionForm
             ? 'Predictions locked'
             : isPending
               ? 'Placing…'
-              : `Place ${side} • ${formatOdds(selectedOdds ?? 1)}`}
+              : selectedMarket
+                ? `Place Bet • ${formatOdds(selectedOdds ?? 1)}`
+                : 'Select a Market to Bet'}
         </button>
       </form>
     </FormProvider>

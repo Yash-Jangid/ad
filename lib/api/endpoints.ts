@@ -6,33 +6,41 @@
 export const ENDPOINTS = {
   // ── Auth ──────────────────────────────────────────────────────────────────
   auth: {
-    login:    () => '/auth/login',
+    login: () => '/auth/login',
     register: () => '/auth/register',
-    refresh:  () => '/auth/refresh',
-    logout:   () => '/auth/logout',
-    me:       () => '/auth/me',
+    refresh: () => '/auth/refresh',
+    logout: () => '/auth/logout',
+    me: () => '/auth/me',
   },
 
   // ── Matches ───────────────────────────────────────────────────────────────
   matches: {
-    upcoming: () => '/matches/upcoming',
-    live:     () => '/matches/live',
-    byId:     (id: string) => `/matches/${id}`,
-    sync:     () => '/matches/sync',
+    list: (limit = 20) => `/matches?limit=${limit}`,
+    upcoming: (limit = 20) => `/matches/upcoming?limit=${limit}`,
+    live: () => '/matches/live',
+    byId: (id: string) => `/matches/${id}`,
+    odds: (id: string) => `/matches/${id}/odds`,
+    sync: () => '/matches/sync',
     /** SSE endpoint — use api.sse(), not api.get(). Pass the match ID. */
-    sse:      (id: string) => `/matches/${id}/stream`,
+    sse: (id: string) => `/matches/${id}/stream`,
+  },
+
+  // ── Markets ───────────────────────────────────────────────────────────────
+  markets: {
+    byMatch: (matchId: string) => `/matches/${matchId}/markets`,
+    byId: (matchId: string, marketId: string) => `/matches/${matchId}/markets/${marketId}`,
   },
 
   // ── Predictions ───────────────────────────────────────────────────────────
   predictions: {
-    place:   () => '/predictions',
-    my:      (page = 1, limit = 20) => `/predictions/my?page=${page}&limit=${limit}`,
+    place: () => '/predictions',
+    my: (page = 1, limit = 20) => `/predictions/my?page=${page}&limit=${limit}`,
     byMatch: (matchId: string) => `/predictions/match/${matchId}`,
   },
 
   // ── Leaderboard ───────────────────────────────────────────────────────────
   leaderboard: {
-    top:    (limit = 50) => `/leaderboard?limit=${limit}`,
+    top: (limit = 50) => `/leaderboard?limit=${limit}`,
     myRank: () => '/leaderboard/my-rank',
   },
 
@@ -40,7 +48,8 @@ export const ENDPOINTS = {
   ledger: {
     myBalance: () => '/ledger/balance',
     myHistory: (page = 1, limit = 20) => `/ledger/history?page=${page}&limit=${limit}`,
-    downlineHistory: (page = 1, limit = 50) => `/ledger/downline-history?page=${page}&limit=${limit}`,
+    downlineHistory: (page = 1, limit = 50) =>
+      `/ledger/downline-history?page=${page}&limit=${limit}`,
     adminTopUp: () => '/ledger/admin/top-up',
   },
 
@@ -55,20 +64,20 @@ export const ENDPOINTS = {
       const qs = query.toString();
       return qs ? `/admin/audit-logs?${qs}` : '/admin/audit-logs';
     },
-    users:              () => '/admin/users',
-    userById:           (userId: string) => `/admin/users/${userId}`,
-    settle:             (matchId: string) => `/admin/matches/${matchId}/settle`,
+    users: () => '/admin/users',
+    userById: (userId: string) => `/admin/users/${userId}`,
+    settle: (matchId: string) => `/admin/matches/${matchId}/settle`,
     settleCancellation: (matchId: string) => `/admin/matches/${matchId}/cancel`,
     commissionOverride: (userId: string) => `/admin/users/${userId}/commission`,
-    roles:              () => `/admin/roles`,
-    roleById:           (roleId: string) => `/admin/roles/${roleId}`,
-    rolesActive:        () => `/admin/roles/active`,
+    roles: () => `/admin/roles`,
+    roleById: (roleId: string) => `/admin/roles/${roleId}`,
+    rolesActive: () => `/admin/roles/active`,
   },
 
   // ── Hierarchy ─────────────────────────────────────────────────────────────
   hierarchy: {
     promote: (userId: string) => `/hierarchy/${userId}/promote`,
-    demote:  (userId: string) => `/hierarchy/${userId}/demote`,
-    tree:    () => `/hierarchy/tree`,
-  }
+    demote: (userId: string) => `/hierarchy/${userId}/demote`,
+    tree: () => `/hierarchy/tree`,
+  },
 } as const;

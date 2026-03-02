@@ -1,4 +1,3 @@
-
 export interface ApiResponse<T> {
   data: T;
   message?: string;
@@ -94,12 +93,59 @@ export interface Match {
   teamB: string;
   status: MatchStatus;
   startTime: string;
+  category?: string;
   odds: Odds;
   streamingUrl?: string;
   streamingProvider?: string;
   predictionsLocked: boolean;
   predictionCount: number;
   totalPool: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Market ────────────────────────────────────────────────────────────────────
+
+export interface MarketOutcome {
+  outcomeKey: string;
+  label: string;
+  decimalOdds: number;
+  impliedProbability: number;
+}
+
+export type MarketStatus = 'OPEN' | 'LOCKED' | 'SUSPENDED' | 'SETTLED' | 'VOID';
+export type MarketSettlementTrigger =
+  | 'on_toss'
+  | 'on_ball'
+  | 'on_over_end'
+  | 'on_innings_end'
+  | 'on_match_end';
+
+export const MARKET_TIER_LABELS: Record<MarketSettlementTrigger, string> = {
+  on_toss: 'Toss',
+  on_ball: 'Ball',
+  on_over_end: 'Over',
+  on_innings_end: 'Innings',
+  on_match_end: 'Match',
+};
+
+export interface Market {
+  id: string;
+  matchId: string;
+  marketType: string;
+  displayName: string;
+  status: MarketStatus;
+  settlementTrigger: MarketSettlementTrigger;
+  overNumber?: number | null;
+  ballNumber?: number | null;
+  line?: number | null;
+  playerName?: string | null;
+  outcomes: MarketOutcome[];
+  winningOutcomeKey?: string | null;
+  totalBetsCount: number;
+  totalStakedPoints: number;
+  lockedAt?: string | null;
+  settledAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

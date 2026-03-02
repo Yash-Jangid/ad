@@ -16,32 +16,32 @@ import { cn } from '@/lib/utils/cn';
 
 const BUSINESS_TAGS = [
   { label: 'All Activities', value: '' },
-  { label: 'Top-ups',        value: 'topup' },
-  { label: 'Transfers',      value: 'transfer' },
-  { label: 'Bets Placed',    value: 'bet' },
-  { label: 'Settlements',    value: 'settlement' },
-  { label: 'Admin Actions',  value: 'admin_action' },
+  { label: 'Top-ups', value: 'topup' },
+  { label: 'Transfers', value: 'transfer' },
+  { label: 'Bets Placed', value: 'bet' },
+  { label: 'Settlements', value: 'settlement' },
+  { label: 'Admin Actions', value: 'admin_action' },
 ];
 
-const SEVERITIES: AuditSeverity[]  = ['INFO', 'WARN', 'ERROR', 'CRITICAL'];
+const SEVERITIES: AuditSeverity[] = ['INFO', 'WARN', 'ERROR', 'CRITICAL'];
 const AUDIT_ACTIONS: AuditAction[] = ['READ', 'CREATE', 'UPDATE', 'DELETE', 'AUTH', 'ADMIN_ACTION', 'SYSTEM'];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AuditLogsPage() {
-  const [search, setSearch]             = useState('');
-  const [searchField, setSearchField]   = useState<'email' | 'username' | 'id'>('email');
-  const [filters, setFilters]           = useState<AuditLogFilters>({ page: 1, limit: 50 });
-  const [activeTag, setActiveTag]       = useState('');
+  const [search, setSearch] = useState('');
+  const [searchField, setSearchField] = useState<'email' | 'username' | 'id'>('email');
+  const [filters, setFilters] = useState<AuditLogFilters>({ page: 1, limit: 50 });
+  const [activeTag, setActiveTag] = useState('');
 
   // Merge search into appropriate filter field on query submit
   const applySearch = useCallback(() => {
     setFilters(prev => ({
       ...prev,
       page: 1,
-      actorEmail:    searchField === 'email'    ? search || undefined : undefined,
+      actorEmail: searchField === 'email' ? search || undefined : undefined,
       actorUsername: searchField === 'username' ? search || undefined : undefined,
-      actorId:       searchField === 'id'       ? search || undefined : undefined,
+      actorId: searchField === 'id' ? search || undefined : undefined,
     }));
   }, [search, searchField]);
 
@@ -63,9 +63,9 @@ export default function AuditLogsPage() {
   const getSeverityStyles = (sev: AuditSeverity) => {
     const map: Record<AuditSeverity, string> = {
       CRITICAL: 'bg-red-500/10 text-red-500 border-red-500/20',
-      ERROR:    'bg-orange-500/10 text-orange-500 border-orange-500/20',
-      WARN:     'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-      INFO:     'bg-blue-500/10 text-blue-500 border-blue-500/20',
+      ERROR: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+      WARN: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+      INFO: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
     };
     return map[sev] ?? 'bg-gray-500/10 text-gray-400 border-gray-500/20';
   };
@@ -79,11 +79,11 @@ export default function AuditLogsPage() {
   const getActionBadge = (action: AuditAction, tags?: string[]) => {
     // Surface a human-readable business label using tags when possible
     const tag = tags?.[0];
-    if (tag === 'topup')      return { label: 'TOP-UP',   cls: 'text-emerald-400 bg-emerald-400/10' };
-    if (tag === 'transfer')   return { label: 'TRANSFER', cls: 'text-cyan-400 bg-cyan-400/10' };
-    if (tag === 'bet')        return { label: 'BET',      cls: 'text-violet-400 bg-violet-400/10' };
-    if (tag === 'settlement') return { label: 'SETTLED',  cls: 'text-amber-400 bg-amber-400/10' };
-    return { label: action,  cls: 'text-text-secondary bg-background' };
+    if (tag === 'topup') return { label: 'TOP-UP', cls: 'text-emerald-400 bg-emerald-400/10' };
+    if (tag === 'transfer') return { label: 'TRANSFER', cls: 'text-cyan-400 bg-cyan-400/10' };
+    if (tag === 'bet') return { label: 'BET', cls: 'text-violet-400 bg-violet-400/10' };
+    if (tag === 'settlement') return { label: 'SETTLED', cls: 'text-amber-400 bg-amber-400/10' };
+    return { label: action, cls: 'text-text-secondary bg-background' };
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -92,16 +92,15 @@ export default function AuditLogsPage() {
     <div className="flex h-[calc(100vh-8rem)] flex-col lg:flex-row gap-6">
 
       {/* ── Left Sidebar Filters ─────────────────────────────────────────────── */}
-      <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-4">
-        <div>
-          <Text variant="h3" className="font-semibold text-text-primary flex items-center gap-2">
-            <Filter size={20} className="text-primary" />
-            Filters
-          </Text>
-          <Text variant="caption" color="secondary" className="mt-1">Search & refine logs</Text>
-        </div>
-
+      <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-4">
         <div className="flex flex-col gap-4 bg-background-secondary border border-border rounded-xl p-4">
+          <div>
+            <Text variant="h3" className="font-semibold text-text-primary flex items-center gap-2">
+              <Filter size={20} className="text-primary" />
+              Filters
+            </Text>
+            <Text variant="caption" color="secondary" className="mt-1">Search & refine logs</Text>
+          </div>
 
           {/* ── Smart Search (email / username / id) ── */}
           <div className="space-y-1.5">
@@ -158,7 +157,7 @@ export default function AuditLogsPage() {
           </div>
 
           {/* ── Severity ── */}
-          <div className="space-y-1.5">
+          {/* <div className="space-y-1.5">
             <label className="text-xs font-medium text-text-secondary uppercase tracking-wider">Severity</label>
             <select
               className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-primary outline-none"
@@ -168,7 +167,7 @@ export default function AuditLogsPage() {
               <option value="">All Severities</option>
               {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
-          </div>
+          </div> */}
 
           {/* ── Date Range ── */}
           <div className="space-y-1.5">
@@ -216,17 +215,17 @@ export default function AuditLogsPage() {
         {/* Table */}
         <div className="flex-1 overflow-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="sticky top-0 z-10 bg-background-tertiary text-xs uppercase text-text-secondary border-b border-border">
+            <thead className="sticky top-0 z-10 bg-background-tertiary/80 backdrop-blur-sm text-xs uppercase text-text-secondary border-b border-border">
               <tr>
-                <th className="px-4 py-3 font-medium">Timestamp</th>
-                <th className="px-4 py-3 font-medium">Severity</th>
-                <th className="px-4 py-3 font-medium">Action</th>
-                <th className="px-4 py-3 font-medium">Resource</th>
-                <th className="px-4 py-3 font-medium">Actor</th>
-                <th className="px-4 py-3 font-medium text-right">Status</th>
+                <th className="px-5 py-4 font-semibold tracking-wider">Timestamp</th>
+                {/* <th className="px-5 py-4 font-semibold tracking-wider">Severity</th> */}
+                <th className="px-5 py-4 font-semibold tracking-wider">Action</th>
+                <th className="px-5 py-4 font-semibold tracking-wider">Resource</th>
+                <th className="px-5 py-4 font-semibold tracking-wider">Actor</th>
+                {/* <th className="px-5 py-4 font-semibold tracking-wider text-right">Status</th> */}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <tbody className="divide-y divide-border/30">
               {isLoading && (
                 <tr><td colSpan={6} className="p-8 text-center text-text-secondary">Loading logs…</td></tr>
               )}
@@ -246,55 +245,54 @@ export default function AuditLogsPage() {
               {!isLoading && logs?.map((log) => {
                 const { label: actionLabel, cls: actionCls } = getActionBadge(log.action, log.tags);
                 return (
-                  <tr key={log._id} className="hover:bg-background-tertiary/30 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-text-tertiary">
+                  <tr key={log._id} className="hover:bg-background-tertiary/40 transition-colors">
+                    <td className="px-5 py-4 font-mono text-xs text-text-secondary">
                       {format(new Date(log.createdAt), 'MMM dd, HH:mm:ss')}
                     </td>
-                    <td className="px-4 py-3">
+                    {/* <td className="px-5 py-4">
                       <div className={cn(
-                        'inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-bold tracking-wider',
+                        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold tracking-widest',
                         getSeverityStyles(log.severity)
                       )}>
                         {getSeverityIcon(log.severity)}
                         {log.severity}
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={cn('font-mono text-xs font-semibold px-2 py-1 rounded border border-border', actionCls)}>
+                    </td> */}
+                    <td className="px-5 py-4">
+                      <span className={cn('font-mono text-xs font-semibold px-2.5 py-1 rounded-md border border-border', actionCls)}>
                         {actionLabel}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium text-text-secondary">{log.resource}</span>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-text-primary text-sm">{log.resource}</span>
                         {log.resourceId && (
-                          <span className="font-mono text-[10px] text-text-tertiary">{log.resourceId.slice(0, 12)}…</span>
+                          <span className="font-mono text-[11px] text-text-tertiary">{log.resourceId.slice(0, 15)}…</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        {/* Prefer human-readable name over UUID */}
-                        <span className="font-medium text-text-secondary text-xs">
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-text-primary text-sm">
                           {(log as any).actorUsername || (log as any).actorEmail || log.actorRole}
                         </span>
-                        <span className="font-mono text-[10px] text-text-tertiary" title={log.actorId}>
+                        <span className="font-mono text-[11px] text-text-tertiary" title={log.actorId}>
                           {(log as any).actorEmail && !(log as any).actorUsername
                             ? (log as any).actorEmail
                             : log.actorId.slice(0, 8) + '…'}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    {/* <td className="px-5 py-4 text-right">
                       <span className={cn(
-                        'font-mono text-xs px-2 py-1 rounded',
+                        'font-mono text-xs font-semibold px-2.5 py-1 rounded-md',
                         (log.requestMeta?.statusCode ?? 200) >= 400
                           ? 'text-red-400 bg-red-400/10'
-                          : 'text-green-400 bg-green-400/10'
+                          : 'text-emerald-400 bg-emerald-400/10'
                       )}>
                         {log.requestMeta?.statusCode || '200'}
                       </span>
-                    </td>
+                    </td> */}
                   </tr>
                 );
               })}

@@ -26,6 +26,11 @@ interface MatchCardProps {
 export function MatchCard({ match }: MatchCardProps) {
   const isLive = match.status === 'LIVE';
 
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <NextLink
       href={ROUTES.user.matchDetail(match.id)}
@@ -41,23 +46,30 @@ export function MatchCard({ match }: MatchCardProps) {
         )}
         aria-label={`${match.teamA} vs ${match.teamB}`}
       >
-        {/* Status + time */}
+        {/* Status + time + category */}
         <div className="flex items-center justify-between">
-          {isLive ? (
-            <div className="flex items-center gap-1.5">
-              <span className="live-dot" aria-label="Live match" />
-              <Text variant="caption" color="error" weight="semibold" className="uppercase tracking-wide">
-                Live
-              </Text>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-text-tertiary">
-              <Icon icon={Clock} size={13} />
-              <Text variant="caption" color="tertiary">
-                {formatMatchTime(match.startTime)}
-              </Text>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {isLive ? (
+              <div className="flex items-center gap-1.5">
+                <span className="live-dot" aria-label="Live match" />
+                <Text variant="caption" color="error" weight="semibold" className="uppercase tracking-wide">
+                  Live
+                </Text>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-text-tertiary">
+                <Icon icon={Clock} size={13} />
+                <Text variant="caption" color="tertiary" suppressHydrationWarning>
+                  {isMounted ? formatMatchTime(match.startTime) : 'Loading...'}
+                </Text>
+              </div>
+            )}
+            {match.category && match.category.toLowerCase() !== 'others' && (
+              <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold uppercase tracking-wider hidden sm:inline-block">
+                {match.category}
+              </span>
+            )}
+          </div>
 
           {match.predictionsLocked && (
             <span className="px-2 py-0.5 rounded-full bg-warning/10 border border-warning/30 text-warning text-xs font-medium">
@@ -87,9 +99,9 @@ export function MatchCard({ match }: MatchCardProps) {
         {/* Odds row */}
         <div className="grid grid-cols-3 gap-2" role="list" aria-label="Odds">
           {[
-            { label: match.teamA, value: match.odds.teamAWin },
-            { label: 'Draw',      value: match.odds.draw      },
-            { label: match.teamB, value: match.odds.teamBWin  },
+            { label: match.teamA, value: match.odds?.teamAWin ?? 1.90 },
+            { label: 'Draw', value: match.odds?.draw ?? 0 },
+            { label: match.teamB, value: match.odds?.teamBWin ?? 1.90 },
           ].map(({ label, value }) => (
             <div
               key={label}

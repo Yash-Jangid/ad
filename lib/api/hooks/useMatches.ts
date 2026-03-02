@@ -8,11 +8,12 @@ import type { Match, LiveMatchScore } from '@/lib/api/types';
 // ─── Query Keys ───────────────────────────────────────────────────────────────
 
 export const matchKeys = {
-  all:      () => ['matches'] as const,
+  all: () => ['matches'] as const,
   upcoming: () => ['matches', 'upcoming'] as const,
-  live:     () => ['matches', 'live'] as const,
-  byId:     (id: string) => ['matches', id] as const,
-  liveScore:(id: string) => ['matches', id, 'live'] as const,
+  live: () => ['matches', 'live'] as const,
+  byId: (id: string) => ['matches', id] as const,
+  liveScore: (id: string) => ['matches', id, 'live'] as const,
+  odds: (id: string) => ['matches', id, 'odds'] as const,
 };
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -21,7 +22,7 @@ export const matchKeys = {
 export const useUpcomingMatches = () =>
   useQuery({
     queryKey: matchKeys.upcoming(),
-    queryFn:  async () => {
+    queryFn: async () => {
       const data = await api.get<Match[]>(ENDPOINTS.matches.upcoming());
       // Guard: backend returns a plain array; if shape is wrong, return empty
       return Array.isArray(data) ? data : [];
@@ -34,7 +35,7 @@ export const useUpcomingMatches = () =>
 export const useLiveMatches = () =>
   useQuery({
     queryKey: matchKeys.live(),
-    queryFn:  async () => {
+    queryFn: async () => {
       const data = await api.get<Match[]>(ENDPOINTS.matches.live());
       return Array.isArray(data) ? data : [];
     },
@@ -47,7 +48,7 @@ export const useLiveMatches = () =>
 export const useMatchById = (id: string) =>
   useQuery({
     queryKey: matchKeys.byId(id),
-    queryFn:  () => api.get<Match>(ENDPOINTS.matches.byId(id)),
+    queryFn: () => api.get<Match>(ENDPOINTS.matches.byId(id)),
     staleTime: CONFIG.query.liveStaleTime,
     enabled: !!id,
   });
@@ -84,9 +85,28 @@ export const useLiveScore = (matchId: string) => {
     return () => source.close();
   }, [matchId, qc]);
 
-  return useQuery<LiveMatchScore>({
+  return useQuery<LiveMatchScore | null>({
     queryKey: matchKeys.liveScore(matchId),
-    // No queryFn — data is populated by the SSE effect above
+    // queryFn is a no-op stub required by TanStack Query v5.
+    // Actual data is pushed into the cache by the SSE useEffect above via setQueryData.
+    // This function is never called because enabled: false.
+    queryFn: () => null,
     enabled: false,
   });
 };
+
+export interface LiveOdds {
+  teamAWin: number;
+  teamBWin: number;
+  draw: number;
+}
+
+/** Current live odds — 5s auto-refetch. Only active when match is LIVE. */
+export const useMatchOdds = (matchId: string, isLive = false) =>
+  useQuery<LiveOdds | null>({
+    queryKey: matchKeys.odds(matchId),
+    queryFn: () => api.get<LiveOdds | null>(ENDPOINTS.matches.odds(matchId)),
+    staleTime: 2_000,
+    refetchInterval: isLive ? 5_000 : false,
+    enabled: isLive && !!matchId,
+  });

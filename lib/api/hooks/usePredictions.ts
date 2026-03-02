@@ -1,9 +1,4 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 import { CONFIG } from '@/lib/constants/config';
@@ -13,8 +8,8 @@ import type { Prediction, PlacePredictionDto, PaginatedResponse } from '@/lib/ap
 // ─── Query Keys ───────────────────────────────────────────────────────────────
 
 export const predictionKeys = {
-  all:     () => ['predictions'] as const,
-  my:      () => ['predictions', 'my'] as const,
+  all: () => ['predictions'] as const,
+  my: () => ['predictions', 'my'] as const,
   byMatch: (matchId: string) => ['predictions', 'match', matchId] as const,
 };
 
@@ -35,7 +30,7 @@ export const useMyPredictions = () =>
 export const usePredictionsByMatch = (matchId: string) =>
   useQuery({
     queryKey: predictionKeys.byMatch(matchId),
-    queryFn:  () => api.get<Prediction[]>(ENDPOINTS.predictions.byMatch(matchId)),
+    queryFn: () => api.get<Prediction[]>(ENDPOINTS.predictions.byMatch(matchId)),
     enabled: !!matchId,
     staleTime: CONFIG.query.liveStaleTime,
   });
@@ -51,9 +46,9 @@ export const usePlacePrediction = () => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: Omit<PlacePredictionDto, 'idempotencyKey'>) => {
+    mutationFn: (payload: Record<string, unknown>) => {
       const idempotencyKey = IdempotencyManager.getKey(
-        `prediction-${payload.matchId}-${payload.outcome}-${payload.side}`
+        `prediction-${String(payload.matchId)}-${String(payload.outcomeKey ?? payload.outcome)}-${String(payload.marketId ?? '')}`
       );
       return api.post<Prediction>(ENDPOINTS.predictions.place(), {
         ...payload,
@@ -74,7 +69,10 @@ export const usePlacePrediction = () => {
         return {
           ...old,
           pages: [
-            [{ ...newPrediction, id: 'optimistic', status: 'PENDING' } as Prediction, ...old.pages[0]!],
+            [
+              { ...newPrediction, id: 'optimistic', status: 'PENDING' } as Prediction,
+              ...old.pages[0]!,
+            ],
             ...old.pages.slice(1),
           ],
         };
